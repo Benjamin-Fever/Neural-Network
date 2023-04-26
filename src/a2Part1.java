@@ -12,7 +12,6 @@ public class a2Part1 {
         // scale features to [0,1] to improve training
         Rescaler rescaler = new Rescaler(instances);
         rescaler.rescaleData(instances);
-        System.out.println(Arrays.deepToString(instances));
 
         // We can"t use strings as labels directly in the network, so need to do some transformations
         LabelEncoder label_encoder = new LabelEncoder(labels);
@@ -26,9 +25,8 @@ public class a2Part1 {
         int n_in = 4, n_hidden = 2, n_out = 3;
         double learning_rate = 0.2;
 
-        double[][] initial_hidden_layer_weights =
-                new double[][]{{-0.28, -0.22}, {0.08, 0.20}, {-0.30, 0.32}, {0.10, 0.01}};
-        double[][] initial_output_layer_weights = new double[][]{{-0.29, 0.03, 0.21}, {0.08, 0.13, -0.36}};
+        double[][] initial_hidden_layer_weights = new double[][]{{-0.28, -0.22}, {0.08, 0.20}, {-0.30, 0.32}, {0.10, 0.01}, { -0.02, -0.2 } };
+        double[][] initial_output_layer_weights = new double[][]{{-0.29, 0.03, 0.21}, {0.08, 0.13, -0.36}, { -0.33, 0.26, 0.06 }};
 
         NeuralNetwork nn = new NeuralNetwork(n_in, n_hidden, n_out, initial_hidden_layer_weights, initial_output_layer_weights, learning_rate);
 
@@ -46,15 +44,13 @@ public class a2Part1 {
         }
         System.out.println("Predicted label for the first instance is: " + instance1_predicted_label);
 
-        // TODO: Perform a single backpropagation pass using the first instance only. (In other words, train with 1
-        //  instance for 1 epoch!). Hint: you will need to first get the weights from a forward pass.
         nn.train(new double[][]{instances[0]}, new int[]{integer_encoded[0]}, 1);
 
         System.out.println("Weights after performing BP for first instance only:");
         System.out.println("Hidden layer weights:\n" + Arrays.deepToString(nn.hidden_layer_weights));
         System.out.println("Output layer weights:\n" + Arrays.deepToString(nn.output_layer_weights));
 
-        // TODO: Train for 100 epochs, on all instances.
+        nn.train(instances, integer_encoded, 100);
         System.out.println("\nAfter training:");
         System.out.println("Hidden layer weights:\n" + Arrays.deepToString(nn.hidden_layer_weights));
         System.out.println("Output layer weights:\n" + Arrays.deepToString(nn.output_layer_weights));
@@ -67,7 +63,11 @@ public class a2Part1 {
         // scale the test according to our training data.
         rescaler.rescaleData(instances_test);
 
-        // TODO: Compute and print the test accuracy
+        int[] test_outputs = nn.predict(instances_test);
+        int[] desired_outputs = label_encoder.intEncode(labels_test);
+        
+        System.out.println("test acc = " + nn.accuracy_calc(desired_outputs, test_outputs));
+
         System.out.println("Finished!");
     }
 
