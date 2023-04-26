@@ -58,55 +58,50 @@ public class NeuralNetwork {
         return weighted_sum;
     }
 
-    public double[][][] backward_propagate_error(double[] inputs, double[] hidden_layer_outputs, double[] output_layer_outputs, int desired_output) {
+    public double[][][] backward_propagate_error(double[] inputs, double[] hidden_layer_outputs,
+        double[] output_layer_outputs, int desired_outputs) {
+
+        double[] desired_output_values = output_convert(desired_outputs);
 
         double[] output_layer_betas = new double[num_outputs];
-        double[] desired_outputs = output_convert(desired_output);
-        for (int z = 0; z < num_outputs; z++){
-            output_layer_betas[z] = desired_outputs[z] - output_layer_outputs[z];
+        for (int i = 0; i < num_outputs; i++) {
+            output_layer_betas[i] = desired_output_values[i] - output_layer_outputs[i];
         }
 
         //System.out.println("OL betas: " + Arrays.toString(output_layer_betas));
 
         double[] hidden_layer_betas = new double[num_hidden];
-        for (int j = 0; j < num_hidden; j++){
+        for (int j = 0; j < num_hidden; j++) {
             hidden_layer_betas[j] = 0;
-            for (int k = 0; k < num_hidden; k++) {
-                double weight = hidden_layer_weights[j][k];
-                double beta = output_layer_betas[k];
-                double output = output_layer_outputs[k];
-                hidden_layer_betas[j] += weight * beta * output * (1 - output);
+            for (int k = 0; k < output_layer_betas.length; k++) {
+                hidden_layer_betas[j] += output_layer_weights[j][k] * (output_layer_outputs[k] * (1 - output_layer_outputs[k]))
+                        * output_layer_betas[k];
             }
         }
         //System.out.println("HL betas: " + Arrays.toString(hidden_layer_betas));
 
-        // This is a HxO array (H hidden nodes, O outputs)
-        double[][] delta_output_layer_weights = new double[num_hidden][num_outputs];
-        for (int i = 0; i < num_outputs; i++){
-            double output = output_layer_outputs[i];
-            double beta = output_layer_betas[i];
-
-            for (int j = 0; j < num_hidden; j++){
-                double hidden_output = hidden_layer_outputs[j];
-                delta_output_layer_weights[j][i] = learning_rate * beta * hidden_output * output * (1 - output);
+        double[][] delta_output_layer_weights = new double[num_hidden + 1][num_outputs];
+        for (int i = 0; i < num_hidden+1; i++) {
+            for (int j = 0; j < num_outputs; j++) {
+                delta_output_layer_weights[i][j] = learning_rate * (i == num_hidden ? 1 : hidden_layer_outputs[i])
+                        * (output_layer_outputs[j] * (1 - output_layer_outputs[j])) * output_layer_betas[j];
             }
         }
-        
 
         // This is a IxH array (I inputs, H hidden nodes)
-        double[][] delta_hidden_layer_weights = new double[num_inputs][num_hidden];
-        for (int i = 0; i < num_hidden; i++){
-            double output = hidden_layer_outputs[i];
-            double beta = hidden_layer_betas[i];
-            for (int j = 0; j < num_inputs; j++){
-                double input = inputs[j];
-                delta_hidden_layer_weights[j][i] = learning_rate * beta * input * output * (1 - output);
+        // Hidden layer weight changes
+        double[][] delta_hidden_layer_weights = new double[num_inputs + 1][num_hidden];
+        for (int i = 0; i <= num_inputs; i++) {
+            for (int j = 0; j < num_hidden; j++) {
+                double prevLayerOutput = i == num_inputs ? 1 : inputs[i];
+                delta_hidden_layer_weights[i][j] = learning_rate * prevLayerOutput
+                        * (hidden_layer_outputs[j] * (1 - hidden_layer_outputs[j])) * hidden_layer_betas[j];
             }
         }
-
         // Return the weights we calculated, so they can be used to update all the weights.
-        return new double[][][]{delta_output_layer_weights, delta_hidden_layer_weights};
+        return new double[][][] { delta_output_layer_weights, delta_hidden_layer_weights };
     }
+
 
     public double[] output_convert(int desired_output){
         switch (desired_output) {
@@ -134,7 +129,7 @@ public class NeuralNetwork {
     }
 
     public void update_weights(double[][] delta_output_layer_weights, double[][] delta_hidden_layer_weights) {
-        for (int i = 0; i < num_hidden; i++){
+        for (int i = 0; i < num_hidden+1; i++){ // +1 to include bias
             for (int j = 0; j < num_outputs; j++){
                 output_layer_weights[i][j] += delta_output_layer_weights[i][j];
             }

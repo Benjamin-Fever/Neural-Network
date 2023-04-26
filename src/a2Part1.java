@@ -3,8 +3,8 @@ import java.util.List;
 
 public class a2Part1 {
 
-    public static void main(String[] _ignored) {
-        List<String[]> lines = Util.getLines("penguins307-train.csv");
+    public static void main(String[] args) {
+        List<String[]> lines = Util.getLines(args[0]);
         String[] header = lines.remove(0);
         String[] labels = Util.getLabels(lines);
         double[][] instances = Util.getData(lines);
@@ -55,7 +55,7 @@ public class a2Part1 {
         System.out.println("Hidden layer weights:\n" + Arrays.deepToString(nn.hidden_layer_weights));
         System.out.println("Output layer weights:\n" + Arrays.deepToString(nn.output_layer_weights));
 
-        List<String[]> lines_test = Util.getLines("penguins307-test.csv");
+        List<String[]> lines_test = Util.getLines(args[1]);
         String[] header_test = lines_test.remove(0);
         String[] labels_test = Util.getLabels(lines_test);
         double[][] instances_test = Util.getData(lines_test);
